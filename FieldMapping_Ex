@@ -1,0 +1,47 @@
+fs_fc = FeatureLayerCollection(firestation_url)
+ra_fc = FeatureLayerCollection(fs_responsearea_url)
+
+RAC_path = r"R:\GEOG491_16440_FALL2025\Class_Data\Data2025\SalemCensus\LODES_Data\SalemBlocks_RAC2020.shp"
+
+emp_fc = arcpy.FeatureClass(RAC_path)
+
+# 'CNS16' = Total number of health care employees in emp_fc
+
+# Create new fieldmappings and add the two input feature classes.
+fieldmappings = arcpy.FieldMappings()
+fieldmappings.addTable(ra_fc)
+fieldmappings.addTable(emp_fc)
+ 
+# Get the CNS16 fieldmap. 
+healthcare_FieldIndex = fieldmappings.findFieldMapIndex("CNS16")
+fieldmap = fieldmappings.getFieldMap(healthcare_FieldIndex)
+ 
+# Get the output field's properties as a field object
+field = fieldmap.outputField
+ 
+# Rename the field and pass the updated object 
+field.name = "healthcare_workers"
+field.aliasName = "healthcare_workers"
+fieldmap.outputField = field
+ 
+# Set the merge rule to SUM and then replace the old fieldmap in the mappings object with the new one 
+fieldmap.mergeRule = "SUM"
+fieldmappings.replaceFieldMap(healthcare_FieldIndex, fieldmap)
+
+# Run the spatial join 
+arcpy.analysis.SpatialJoin(
+    target_features=ra_fc,
+    join_features=emp_fc,
+    out_feature_class=output_fc,
+    join_operation="JOIN_ONE_TO_ONE",
+    join_type="KEEP_ALL",
+    field_mapping=fieldmappings,
+    match_option="INTERSECT"
+)
+
+
+
+
+
+
+
